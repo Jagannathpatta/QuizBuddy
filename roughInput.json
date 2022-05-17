@@ -1,0 +1,97 @@
+{
+  "classid": 1,
+  "sub_id": 3,
+  "chap_id": 1,
+  "questions": [
+    {
+      "question": "If X = {4n -3n- l :n eN} and Y = {9(n- l):ne N}, where N is the set of natural numbers, then X u Y is equal to",
+      "q_type": "MCQ",
+      "diff_lvl": "mid",
+      "ans_id": [
+        4
+      ],
+      "options": [
+        {
+          "id": 1,          
+          "value": "N"          
+        },
+        {
+          "id": 2,          
+          "value": "Y-X"          
+        },
+        {
+          "id": 3,          
+          "value": "X"          
+        },
+        {
+          "id": 4,          
+          "value": "Y",
+          "isAns": "True"      
+        }
+      ]      
+    }
+  ]
+}
+
+
+{
+  "classid": 1,
+  "sub_id": 3,
+  "chap_id": 1,
+  "questions": [
+    {
+      "question": "The total number of subsets of a finite set A has 56 more elements than the total number of subsets of another finite set B. What is the number of elements in the set A?",
+      "q_type": "MCQ",
+      "diff_lvl": "low",
+      "ans_id": [
+        2
+      ],
+      "options": [
+        {
+          "id": 1,          
+          "value": "5"          
+        },
+        {
+          "id": 2,          
+          "value": "6",
+          "isAns": "True"          
+        },
+        {
+          "id": 3,          
+          "value": "7"          
+        },
+        {
+          "id": 4,          
+          "value": "8"      
+        }
+      ]      
+    },
+    {
+      "question": "In a class of 60 students, if 25 students play cricket, 20 students play tennis and 10 students play both the games, then the number of students who play neither is",
+      "q_type": "MCQ",
+      "diff_lvl": "low",
+      "ans_id": [
+        3
+      ],
+      "options": [
+        {
+          "id": 1,          
+          "value": "45"          
+        },
+        {
+          "id": 2,          
+          "value": "0"          
+        },
+        {
+          "id": 3,          
+          "value": "25",
+          "isAns": "True"          
+        },
+        {
+          "id": 4,          
+          "value": "35"      
+        }
+      ]      
+    }
+  ]
+}
