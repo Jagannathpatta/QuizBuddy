@@ -93,4 +93,20 @@ class Student(BaseModel):
     score : Optional[int] = 0
     performance_lvl : Optional[str] 
 
+class Problem(BaseModel):
+    cid : Optional[int] = None
+    sid: Optional[int] = None     
+    CHid: Optional[int] = None
+    dificulty_lvl : Optional[str] = None
+
+class Quiz(BaseModel):
+    sid: int
+    cid : int
+    subid : Optional[int]
+    chid : Optional[int]
+
+class StudQuizId(BaseModel):
+    sid: int
+    quiz_id : int
+    
 
