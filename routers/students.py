@@ -2,6 +2,7 @@ from urllib.request import Request
 from fastapi import APIRouter
 import requests
 import json
+from datetime import datetime
 import random
 from sqlalchemy import false
 from Quiz.database import *
@@ -227,3 +228,169 @@ def question( id:int ):
         curr.close()
         close_db(conn)
 
+@router.post("/attemptquestion")
+def attemptquestion( req : AttemptQuestion ):
+    conn = get_db()
+    curr= conn.cursor()   
+    try:   
+        query = "select `Oid` from Answers where qid = "+ str(req.qid)
+        curr.execute(query)    
+        right_ans_id = curr.fetchone() 
+        print(right_ans_id)
+        if req.aid == right_ans_id:
+            res = { "result":"true", "correctAns":"" }
+            query = "insert into student_question( `St_id` , `qid` ) values("+ str(req.sid) + "," + str(req.qid) +")"
+            # print("query",query)
+            curr.execute(query)
+            conn.commit()
+        else:
+            res = { "result":"false", "correctAns":"" }
+        curr.close()
+        close_db(conn)
+        return {"status":"success", "msg": "Successfuly Read" , "res":res}
+    except Exception as e :   
+        return {"status":"unsuccess", "msg": format(e) }
+    finally:
+        curr.close()
+        close_db(conn)
+
+@router.post("/submitquiz")
+def submitquiz( req : SubmitQuiz ):
+    conn = get_db()
+    curr= conn.cursor()   
+    try:        
+        n_corr_low = 0
+        n_wron_low = 0
+        n_unat_low = 0
+        n_corr_mod = 0
+        n_wron_mod = 0
+        n_unat_mod = 0
+        n_corr_hig = 0
+        n_wron_hig = 0
+        n_unat_hig = 0
+        # date_time = str(datetime.now())
+
+        query = "insert into Attempts( `St_id` , `Quiz_id` ) values("+ str(req.st_id) + "," + str(req.quizid) +")"
+        curr.execute(query)
+        curr.execute('SELECT LAST_INSERT_ID()')
+        at_id = curr.fetchone()[0]
+        
+        records_to_insert = []
+        for question in req.questions:
+            flag = "Unattempted"
+            query = "select `Oid` from Answers where qid = "+ str(question.qid)
+            curr.execute(query)    
+            right_ans_id = curr.fetchone() 
+            # print('right_ans_id',right_ans_id , question.aid)
+            if right_ans_id and question.aid :
+                if question.aid[0] == right_ans_id[0] : #rightly answered
+                    flag = "Right"
+                    if question.diff_lvl == '1':
+                        n_corr_low += 1
+                    elif question.diff_lvl == '2':
+                        n_corr_mod += 1
+                    elif question.diff_lvl == '3':
+                        n_corr_hig += 1
+                    print('right')             
+                elif question.aid[0] != right_ans_id[0] : #wrongly answered
+                    flag = "Wrong"
+                    if question.diff_lvl == '1':
+                        n_wron_low += 1
+                    elif question.diff_lvl == '2':
+                        n_wron_mod += 1
+                    elif question.diff_lvl == '3':
+                        n_wron_hig += 1
+                    print('wrong')
+            else:
+                print('Unattempted')
+                if question.diff_lvl == '1':
+                    n_unat_low += 1
+                elif question.diff_lvl == '2':
+                    n_unat_mod += 1
+                elif question.diff_lvl == '3':
+                    n_unat_hig += 1
+            print(question)
+            records_to_insert.append(( at_id , question.qid , question.time , flag ))
+        score = (( n_corr_low + n_corr_mod + n_corr_hig ) / len(req.questions)) * 100
+        print("score ",score)
+        print( n_corr_low , n_corr_mod , n_corr_hig , n_wron_low , n_wron_mod , n_wron_hig , n_unat_low , n_unat_mod , n_unat_hig )
+        
+        mySql_insert_query = """INSERT INTO Timings (Aid, qid, time_taken , status) 
+                           VALUES (%s, %s, %s, %s) """
+        curr.executemany(mySql_insert_query, records_to_insert)
+
+        query = """
+                Update  Attempts a SET 
+                a.score = %s , 
+                a.n_corr_low = %s , 
+                a.n_wron_low = %s ,
+                a.n_unat_low = %s ,
+                a.n_corr_mod = %s ,
+                a.n_wron_mod = %s ,
+                a.n_unat_mod = %s ,
+                a.n_corr_hig = %s ,
+                a.n_wron_hig = %s ,
+                a.n_unat_hig = %s 
+                where a.Aid = %s  
+                """
+        curr.execute(query , (score,n_corr_low,n_wron_low,n_unat_low,n_corr_mod,n_wron_mod,n_unat_mod,n_corr_hig,n_wron_hig,n_unat_hig, at_id) )
+
+        # res = req    
+        conn.commit()    
+        return {"status":"success", "msg": "Successfuly Quiz Submitted" , "res" : at_id }
+    except Exception as e :   
+        return {"status":"unsuccess", "msg": format(e) }
+    finally:
+        curr.close()
+        close_db(conn)
+
+@router.post("/attemptedquizs")
+def attemptedquizs( sid : int ):
+    conn = get_db()
+    curr= conn.cursor()   
+    try: 
+        query = "select a.Aid , a.Quiz_id, a.score, a.date_time from Attempts a where St_id = " + str(sid)
+        curr.execute(query)
+        res = [dict((curr.description[i][0], value) \
+                for i, value in enumerate(row)) for row in curr.fetchall()]
+        
+        return {"status":"success", "msg": "Successfuly read Submitted Quizzes" , "res" : res }
+    except Exception as e :   
+        return {"status":"unsuccess", "msg": format(e) }
+    finally:
+        curr.close()
+        close_db(conn)
+
+@router.post("/showresult")
+def showresult( aid : int ):
+    conn = get_db()
+    curr= conn.cursor()   
+    try: 
+        query = "select * from Attempts where Aid = " + str(aid)
+        curr.execute(query)
+        res = [dict((curr.description[i][0], value) \
+                for i, value in enumerate(row)) for row in curr.fetchall()]
+        
+        query2 = "select `qid` , `time_taken` , `status` from Timings where Aid = " + str(aid)
+        curr.execute(query2)
+        res2 = [dict((curr.description[i][0], value) \
+                for i, value in enumerate(row)) for row in curr.fetchall()]
+        
+        for quest in res2:
+            quest["deatils"] = (question(quest['qid']))
+            query = "select Oid from Answers where qid = " + str(quest['qid'])
+            curr.execute(query)
+            x = curr.fetchone()
+            if x :
+                quest["ans"] = x[0]
+            else:
+                quest["ans"] = None
+
+        res[0]["questions"]=res2
+        
+        return {"status":"success", "msg": "Successfuly read Submitted Quizzes" , "res" : res }
+    except Exception as e :   
+        return {"status":"unsuccess", "msg": format(e) }
+    finally:
+        curr.close()
+        close_db(conn)

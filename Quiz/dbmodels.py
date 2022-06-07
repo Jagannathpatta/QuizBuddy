@@ -109,4 +109,15 @@ class StudQuizId(BaseModel):
     sid: int
     quiz_id : int
     
+class AttemptQuestion(BaseModel):
+    qid : int
+    aid : list[int]
+    time : Optional[int]
+    sid : Optional[int] 
+    q_type : Optional[str] 
+    diff_lvl : Optional[str] 
 
+class SubmitQuiz(BaseModel):
+    st_id : int
+    quizid : int
+    questions : list[AttemptQuestion]
